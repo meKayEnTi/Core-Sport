@@ -9,6 +9,9 @@ import com.ecommerce.coresport.service.ProductService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,9 +33,29 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductResponse> getAllProducts() {
-        return productRepository.findAll().stream()
-                .map(productMapper::toProductResponse)
-                .toList();
+    public Page<ProductResponse> getAllProducts(Pageable pageable, Integer brandId, Integer typeId, String keyword) {
+        Specification<Product> spec = null;
+
+        if (brandId != null) {
+            spec = and(spec,
+                (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("brand").get("id"), brandId)
+            );
+        }
+        if (typeId != null) {
+            spec = and(spec,
+                (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("type").get("id"), typeId)
+            );
+        }
+        if (keyword != null && !keyword.isEmpty()) {
+            spec = and(spec,
+                (root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("name"), "%" + keyword + "%")
+            );
+        }
+        return productRepository.findAll(spec, pageable).map(productMapper::toProductResponse);
     }
+
+    private Specification<Product> and(Specification<Product> base, Specification<Product> addition) {
+        return base == null ? addition : base.and(addition);
+    }
+
 }
