@@ -1,20 +1,24 @@
 package com.ecommerce.coresport.exception;
 
+import com.ecommerce.coresport.model.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.time.LocalDateTime;
 
 @ControllerAdvice
-public class GlobalHandlerException {
+public class GlobalHandlerException extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<Map<String,String>> handleProductNotFoundException(ProductNotFoundException exception) {
-        Map<String,String> error = new HashMap<>();
-        error.put("message", "Product not found!");
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    public ResponseEntity<Object> handleProductNotFoundException(ProductNotFoundException exception) {
+        ApiResponse<Object> apiResponse = ApiResponse.builder()
+                .status(HttpStatus.NOT_FOUND)
+                .message(exception.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
     }
 }
