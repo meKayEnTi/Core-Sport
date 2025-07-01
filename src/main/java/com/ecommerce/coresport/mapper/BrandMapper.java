@@ -6,5 +6,5 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface BrandMapper {
-    public BrandResponse toBrandResponse(Brand brand);
+    BrandResponse toBrandResponse(Brand brand);
 }
