@@ -4,10 +4,11 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
@@ -15,12 +16,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+@Slf4j
 @Component
 public class JwtHelper {
 
-    public static final long JWT_EXPIRATION_TIME = 86400000;
+    @Value("${JWT_EXPIRATION}")
+    private long jwtExpiration;
 
-    private String jwtSecret = "9552b4701e3e3d18738d2cc791cb97bc5b6206ab04d0878e0574c97a4b3b074f";
+    @Value("${JWT_SECRET}")
+    private String jwtSecret ;
 
     public String getUsernameFromToken(String token) {
         // Logic to extract username from JWT token
@@ -54,7 +58,7 @@ public class JwtHelper {
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
@@ -67,7 +71,6 @@ public class JwtHelper {
     }
 
     private Claims getAllClaimsFromToken(String token) {
-//        System.out.println("DEBUG: Token received = " + token);
         Key key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         return Jwts.parserBuilder()
                 .setSigningKey(key)
