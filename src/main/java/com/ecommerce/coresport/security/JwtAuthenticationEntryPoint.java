@@ -1,4 +1,4 @@
-package com.ecommerce.coresport.configuration;
+package com.ecommerce.coresport.security;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

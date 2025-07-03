@@ -1,7 +1,7 @@
 package com.ecommerce.coresport.service.implementation;
 
 import com.ecommerce.coresport.entity.Product;
-import com.ecommerce.coresport.exception.ProductNotFoundException;
+import com.ecommerce.coresport.exception.ResourceNotFoundException;
 import com.ecommerce.coresport.mapper.ProductMapper;
 import com.ecommerce.coresport.model.ProductResponse;
 import com.ecommerce.coresport.repository.ProductRepository;
@@ -25,7 +25,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponse getProductById(Integer productId) {
         Product product = productRepository.findById(productId).orElseThrow(
-                () -> new ProductNotFoundException("Product not found!")
+                () -> new ResourceNotFoundException("Product not found!")
         );
         return productMapper.toProductResponse(product);
     }

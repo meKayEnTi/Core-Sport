@@ -1,7 +1,6 @@
 package com.ecommerce.coresport.controller;
 
 import com.ecommerce.coresport.mapper.CartMapper;
-import com.ecommerce.coresport.model.ApiResponse;
 import com.ecommerce.coresport.model.CartResponse;
 import com.ecommerce.coresport.service.CartService;
 import lombok.AccessLevel;

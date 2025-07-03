@@ -56,7 +56,7 @@ public class OrderServiceImpl implements OrderService {
     public Integer createOrder(OrderRequest request) {
         CartResponse cart = cartService.getCartById(request.getCartId());
         if(cart == null){
-            log.error("Basket with ID {} not found.", request.getCartId());
+            log.error("Cart with ID {} not found.", request.getCartId());
             return null;
         }
         List<OrderItem> items = cart.getItems().stream().map(this::cartItemToOrderItem).toList();

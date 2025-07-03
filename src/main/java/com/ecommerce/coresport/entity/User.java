@@ -23,18 +23,18 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID id;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     String username;
 
     String password;
 
     @Email
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     String email;
 
-    Boolean enabled;
+    Boolean enabled = true;
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),

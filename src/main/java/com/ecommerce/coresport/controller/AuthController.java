@@ -1,8 +1,8 @@
 package com.ecommerce.coresport.controller;
 
-import com.ecommerce.coresport.configuration.JwtHelper;
-import com.ecommerce.coresport.model.JwtReponse;
-import com.ecommerce.coresport.model.JwtRequest;
+import com.ecommerce.coresport.model.*;
+import com.ecommerce.coresport.security.JwtHelper;
+import com.ecommerce.coresport.service.AuthService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,49 +20,18 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthController {
-    UserDetailsService userDetailsService;
 
-    AuthenticationManager manager;
+    AuthService authService;
 
-    JwtHelper helper;
+    @PostMapping("/register")
+    ResponseEntity<UserResponse> register(@RequestBody RegisterRequest request){
+        return ResponseEntity.ok().body(authService.register(request));
+    }
 
     @PostMapping("/login")
-    ResponseEntity<JwtReponse> login(@RequestBody JwtRequest jwtRequest){
-        this.authenticate(jwtRequest.getUsername(), jwtRequest.getPassword());
-        UserDetails userDetails = userDetailsService.loadUserByUsername(jwtRequest.getUsername());
-        String token = helper.generateToken(userDetails);
-        JwtReponse reponse = JwtReponse.builder()
-                .username(jwtRequest.getUsername())
-                .token(token)
-                .build();
-        return ResponseEntity.ok().body(reponse);
+    ResponseEntity<JwtResponse> login(@RequestBody JwtRequest jwtRequest){
+        JwtResponse response = authService.login(jwtRequest);
+        return ResponseEntity.ok().body(response);
     }
 
-    @GetMapping("/user")
-    public ResponseEntity<UserDetails> getUserDetails(@RequestHeader("Authorization") String tokenHeader){
-        String token = extractTokenFromHeader(tokenHeader);
-        if(token != null){
-            String username = helper.getUsernameFromToken(token);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            return ResponseEntity.ok().body(userDetails);
-        }else {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    private String extractTokenFromHeader(String tokenHeader){
-        if(tokenHeader != null && tokenHeader.startsWith("Bearer ")){
-            return tokenHeader.substring(7);
-        }
-        return null;
-    }
-
-    private void authenticate(String username, String password){
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, password);
-        try {
-            manager.authenticate(authenticationToken);
-        } catch (Exception e) {
-            throw new BadCredentialsException("Invalid Username or Password");
-        }
-    }
 }
