@@ -1,7 +1,7 @@
 package com.ecommerce.coresport.security;
 
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 @Log4j2
@@ -34,53 +35,65 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getServletPath();
-        if (path.equals("/api/v1/auth/login")) {
+
+        if (isExcludedPath(path)) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String header = request.getHeader("Authorization");
-        String username = null;
-        String token = null;
-
-        if (header != null && header.startsWith("Bearer ")) {
-            token = header.substring(7);
-            try {
-                username = this.jwtHelper.getUsernameFromToken(token);
-            } catch (IllegalArgumentException | ExpiredJwtException | MalformedJwtException e) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid or expired token");
-                log.error("Jwt Processing Failed", e);
-                return;
-            }catch (SignatureException ex) {
-                log.warn("Invalid JWT signature: {}", ex.getMessage());
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid JWT signature");
-                return;
-            }
-        } else {
-            log.warn("Authorization header is missing or does not start with Bearer");
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Authorization header is missing");
+        if (header == null || !header.startsWith("Bearer ")) {
+            sendError(response, "Authorization header is missing or invalid");
             return;
         }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-            log.info(userDetails.getAuthorities());
-            if (Boolean.TRUE.equals(this.jwtHelper.validateToken(token, userDetails))) {
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                filterChain.doFilter(request, response);
-            } else {
-                log.warn("Jwt Token is not valid");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid token");
+        String token = header.substring(7);
+        try {
+            if (!processAuthentication(token)) {
+                sendError(response, "Invalid token");
+                return;
             }
-        }else {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Unauthenticated");
+        } catch (ExpiredJwtException e) {
+            sendError(response, "Token expired");
+            return;
+        } catch (SignatureException e) {
+            sendError(response, "Invalid JWT signature");
+            return;
+        } catch (JwtException | IllegalArgumentException e) {
+            sendError(response, "Invalid or malformed token");
+            return;
         }
+
+        filterChain.doFilter(request, response);
+    }
+    private boolean isExcludedPath(String path) {
+        List<String> excludedPaths = List.of(
+                "/api/v1/auth/login", "/swagger-ui", "/v3/api-docs", "/swagger-resources",
+                "/swagger-ui.html", "/webjars", "/favicon.ico"
+        );
+        return excludedPaths.stream().anyMatch(path::startsWith);
+    }
+
+    private boolean processAuthentication(String token) {
+        String username = jwtHelper.getUsernameFromToken(token);
+        if (username == null || SecurityContextHolder.getContext().getAuthentication() != null) {
+            return false;
+        }
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        if (!Boolean.TRUE.equals(jwtHelper.validateToken(token, userDetails))) {
+            return false;
+        }
+
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        return true;
+    }
+
+    private void sendError(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"message\": \"" + message + "\"}");
     }
 }

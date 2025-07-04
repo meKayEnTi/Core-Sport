@@ -1,5 +1,6 @@
 package com.ecommerce.coresport.configuration;
 
+import com.ecommerce.coresport.security.JwtAccessDeniedHandler;
 import com.ecommerce.coresport.security.JwtAuthenticationEntryPoint;
 import com.ecommerce.coresport.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     private final UserDetailsService userDetailsService;
@@ -32,10 +34,23 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(request -> request
-                .requestMatchers("/products/**").authenticated()
-                .requestMatchers("/auth/login").permitAll()
-                .anyRequest().permitAll())
-            .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+                .requestMatchers("/api/v1/auth/**").permitAll()
+                    .requestMatchers(
+                            "/swagger-ui/**",
+                            "/v3/api-docs/**",
+                            "/swagger-resources/**",
+                            "/swagger-ui.html",
+                            "/webjars/**",
+                            "/",
+                            "/index.html",
+                            "/static/**",
+                            "/favicon.ico"
+                    ).permitAll()
+                    .requestMatchers("/api/v1/**").authenticated()
+                    .anyRequest().permitAll()
+            )
+            .exceptionHandling(ex ->
+                    ex.authenticationEntryPoint(jwtAuthenticationEntryPoint).accessDeniedHandler(jwtAccessDeniedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

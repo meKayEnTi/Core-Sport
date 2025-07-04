@@ -24,7 +24,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ErrorResponse> handleConflictException(ResourceNotFoundException exception) {
+    public ResponseEntity<ErrorResponse> handleConflictException(ConflictException exception) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .status(HttpStatus.CONFLICT)
                 .message(exception.getMessage())
@@ -34,7 +34,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(BadCredentialException.class)
-    public ResponseEntity<ErrorResponse> handleBadCredentialException(ResourceNotFoundException exception) {
+    public ResponseEntity<ErrorResponse> handleBadCredentialException(BadCredentialException exception) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .status(HttpStatus.BAD_REQUEST)
                 .message(exception.getMessage())

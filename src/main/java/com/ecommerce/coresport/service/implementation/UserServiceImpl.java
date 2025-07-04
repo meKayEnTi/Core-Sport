@@ -80,9 +80,9 @@ public class UserServiceImpl implements UserService {
 
     private User getAuthenticatedUser(){
         Authentication context = SecurityContextHolder.getContext().getAuthentication();
-        String username = context.getName();
+        String input = context.getName();
 
-        return userRepository.findByUsername(username).orElseThrow(() ->
+        return userRepository.findByUsernameOrEmail(input, input).orElseThrow(() ->
                 new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND)
         );
     }
