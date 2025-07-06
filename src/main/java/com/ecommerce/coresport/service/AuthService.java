@@ -9,4 +9,6 @@ public interface AuthService {
     // Login (kết hợp username/email + password)
     JwtResponse login(JwtRequest request);
 
+    JwtResponse refresh(TokenRefreshRequest request);
+
 }

@@ -1,10 +1,8 @@
 package com.ecommerce.coresport.service.implementation;
 
-import com.ecommerce.coresport.entity.CartItem;
 import com.ecommerce.coresport.entity.OrderAggregate.Order;
 import com.ecommerce.coresport.entity.OrderAggregate.OrderItem;
 import com.ecommerce.coresport.entity.OrderAggregate.ProductItemOrdered;
-import com.ecommerce.coresport.entity.Product;
 import com.ecommerce.coresport.mapper.OrderMapper;
 import com.ecommerce.coresport.model.CartItemResponse;
 import com.ecommerce.coresport.model.CartResponse;

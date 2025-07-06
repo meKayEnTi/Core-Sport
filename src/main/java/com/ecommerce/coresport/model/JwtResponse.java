@@ -12,4 +12,8 @@ public class JwtResponse {
     String username;
 
     String token;
+
+    String refreshToken;
+
+    String deviceId;
 }

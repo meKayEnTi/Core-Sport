@@ -12,4 +12,8 @@ public class JwtRequest {
     String username;
 
     String password;
+
+    String userAgent;
+
+    String ipAddress;
 }

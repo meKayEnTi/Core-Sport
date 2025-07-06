@@ -7,10 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @AllArgsConstructor
 public class CustomUserDetails implements UserDetails {
@@ -25,6 +22,10 @@ public class CustomUserDetails implements UserDetails {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
         }
         return authorities;
+    }
+
+    public UUID getId(){
+        return user.getId();
     }
 
     @Override
@@ -56,4 +57,5 @@ public class CustomUserDetails implements UserDetails {
     public boolean isEnabled() {
         return Boolean.TRUE.equals(user.getEnabled());
     }
+
 }

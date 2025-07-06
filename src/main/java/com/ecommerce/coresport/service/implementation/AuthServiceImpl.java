@@ -9,9 +9,11 @@ import com.ecommerce.coresport.mapper.UserMapper;
 import com.ecommerce.coresport.model.*;
 import com.ecommerce.coresport.repository.RoleRepository;
 import com.ecommerce.coresport.repository.UserRepository;
+import com.ecommerce.coresport.security.CustomUserDetails;
 import com.ecommerce.coresport.security.CustomUserDetailsService;
 import com.ecommerce.coresport.security.JwtHelper;
 import com.ecommerce.coresport.service.AuthService;
+import com.ecommerce.coresport.service.RefreshTokenService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +38,7 @@ public class AuthServiceImpl implements AuthService {
     AuthenticationManager manager;
     JwtHelper helper;
     RoleRepository roleRepository;
+    RefreshTokenService refreshTokenService;
 
     @Override
     public UserResponse register(RegisterRequest request) {
@@ -62,9 +66,52 @@ public class AuthServiceImpl implements AuthService {
         }
         UserDetails customUserDetails = service.loadUserByUsername(request.getUsername());
         String token = helper.generateToken(customUserDetails);
+
+        String deviceId = UUID.randomUUID().toString();
+        String refreshToken = UUID.randomUUID().toString();
+
+        refreshTokenService.store((
+                (CustomUserDetails)customUserDetails).getId(),
+                deviceId,
+                refreshToken,
+                request.getUserAgent(),
+                request.getIpAddress()
+        );
+
         return JwtResponse.builder()
                 .username(request.getUsername())
                 .token(token)
+                .refreshToken(refreshToken)
+                .deviceId(deviceId)
+                .build();
+    }
+
+    @Override
+    public JwtResponse refresh(TokenRefreshRequest request) {
+        UUID userId = UUID.fromString(request.userId());
+        String deviceId = request.deviceId();
+
+        // 1. Validate stored session
+        RefreshTokenSession session = refreshTokenService.verifyExpiration(userId, deviceId);
+        if (!session.getRefreshToken().equals(request.refreshToken())) {
+            throw new BadCredentialsException("Invalid refresh token");
+        }
+
+        // 2. Load user and generate new access token
+        UserDetails userDetails = service.loadUserByUsername(request.username());
+        String newAccessToken = helper.generateToken(userDetails);
+
+        // 3. (Optional) rotate refresh token
+        String newRefreshToken = UUID.randomUUID().toString();
+        refreshTokenService.store(userId, deviceId, newRefreshToken,
+                session.getUserAgent(), session.getIpAddress());
+
+        // 4. Return refreshed tokens
+        return JwtResponse.builder()
+                .username(request.username())
+                .token(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .deviceId(deviceId)
                 .build();
     }
 }
