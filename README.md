@@ -38,3 +38,21 @@
 ```bash
 git clone https://github.com/meKayEnTi/Core-Sport.git
 cd Core-Sport
+```
+
+### 2. Chạy container của postgres và redis
+```bash
+docker-compose up -d
+# Dịch vụ sẽ chạy:
+# - PostgreSQL: 5432
+# - Redis:      6379
+```
+
+### 3. Chạy dự án bằng Maven (Local)
+```bash
+# Build và chạy
+# - Ứng dụng:   http://localhost:8080
+# - Swagger UI: http://localhost:8080/swagger-ui/index.html
+mvn clean spring-boot:run
+```
+
