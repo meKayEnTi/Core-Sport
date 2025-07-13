@@ -26,7 +26,7 @@
 
 ## ⚙️ Prerequisites / Yêu cầu môi trường
 
-1. Java 17+  
+1. Java 21+  
 2. Maven 3.8+  
 3. Docker & Docker Compose (nếu chạy bằng container)  
 4. Git  
@@ -50,9 +50,9 @@ docker-compose up -d
 
 ### 3. Chạy dự án bằng Maven (Local)
 ```bash
+mvn clean spring-boot:run
 # Build và chạy
 # - Ứng dụng:   http://localhost:8080
 # - Swagger UI: http://localhost:8080/swagger-ui/index.html
-mvn clean spring-boot:run
 ```
 
